@@ -1,5 +1,6 @@
 from flask_restful import Resource,reqparse
 from flask import jsonify
+import json
 from werkzeug.security import safe_str_cmp
 from flask_jwt_extended import create_access_token,jwt_required
 from db import query
@@ -8,7 +9,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 class CheckUser(Resource):
-    def get(self):
+    def post(self):
         parser=reqparse.RequestParser()
         parser.add_argument('rollno',type=int,required=True,help="rollno cannot be left blank!")
         data=parser.parse_args()
@@ -16,20 +17,24 @@ class CheckUser(Resource):
 
 class GetUserEvents(Resource):
     @jwt_required
-    def get(self):
+    def post(self): 
         parser=reqparse.RequestParser()
         parser.add_argument('rollno',type=int,required=True,help="rollno cannot be left blank!")
+        parser.add_argument('getpost',type=str,required=True,help=" getpost be left blank!")
         data=parser.parse_args()
-        return query(f"""SELECT e.eventname,e.eventdesc,e.clubname,e.eventincharge,e.contact,e.lastregdate,e.startdate,e.enddate FROM webapp.eventsregistered e NATURAL JOIN webapp.studentsregistered s  WHERE s.rollno <> '{data["rollno"]}' """)
+        if data["getpost"] == "get":
+            value =query(f"""SELECT e.eventname,e.eventdesc,e.clubname,e.eventincharge,e.contact,e.lastregdate,e.startdate,e.enddate FROM webapp.eventsregistered e where e.eventname NOT IN (SELECT s.eventname FROM webapp.studentsregistered s WHERE s.rollno = '{data["rollno"]}')""",False)
+            result= {"events":value }
+            print(result)
+        else:
+            value =query(f"""SELECT e.eventname,e.eventdesc,e.clubname,e.eventincharge,e.contact,e.lastregdate,e.startdate,e.enddate FROM webapp.eventsregistered e NATURAL JOIN webapp.studentsregistered s  WHERE s.rollno = '{data["rollno"]}' """,False)
+            print(type(value))
+            result= {"events":value }
+            print(type(result))
+        return jsonify(result)
+class Enroll(Resource):
     @jwt_required
     def post(self):
-        parser=reqparse.RequestParser()
-        parser.add_argument('rollno',type=int,required=True,help="rollno cannot be left blank!")
-        data=parser.parse_args()
-        return query(f"""SELECT e.eventname,e.eventdesc,e.clubname,e.eventincharge,e.contact,e.lastregdate,e.startdate,e.enddate FROM webapp.eventsregistered e NATURAL JOIN webapp.studentsregistered s  WHERE s.rollno = '{data["rollno"]}' """)
-class EnrollUnroll(Resource):
-    @jwt_required
-    def get(self):
         parser=reqparse.RequestParser()
         parser.add_argument('rollno',type=int,required=True,help="rollno cannot be left blank!")
         parser.add_argument('name',type=str,required=True,help="name cannot be left blank!")
@@ -42,7 +47,9 @@ class EnrollUnroll(Resource):
         parser.add_argument('section',type=int,required=True,help="section cannot be left blank!")
         data=parser.parse_args()
         query(f"""INSERT INTO webapp.studentsregistered values('{data["rollno"]}','{data["name"]}', '{data["emailid"]}','{data["eventname"]}' ,'{data["contactno"]}', '{data["year"]}', '{data["branch"]}','{data["section"]}' ) """)
-        return  {"message":"Successfully enrolled event!"}, 200
+        return  jsonify({"message":"Successfully enrolled event!"})
+
+class Unroll(Resource):
     @jwt_required
     def post(self):
         parser=reqparse.RequestParser()
@@ -50,7 +57,7 @@ class EnrollUnroll(Resource):
         parser.add_argument('eventname',type=str,required=True,help="eventname cannot be left blank!")
         data=parser.parse_args()
         query(f"""DELETE FROM webapp.studentsregistered WHERE rollno ='{data["rollno"]}' AND  eventname LIKE '{data["eventname"]}' """)
-        return  {"message":"Successfully unrolled event!"}, 200
+        return  jsonify({"message":"Successfully unrolled event!"})
 
 class User(): 
     def __init__(self,rollno,pwd):
@@ -87,19 +94,19 @@ class UserSignUp(Resource):
         query(f"""INSERT INTO webapp.userslogin VALUES('{data["rollno"]}', '{data["pwd"]}')""")
         return {"message":"Successfully Signed Up!"},201
 
-'''class ForgotPasswordUser(Resource):
+class ForgotPasswordUser(Resource):
     @jwt_required
-    def get(self):
+    def post(self):
         try:
             parser=reqparse.RequestParser()
             parser.add_argument('rollno',type=str,required=True,help="rollno cannot be left blank!")
             parser.add_argument('pwd',type=str,required=True,help="pwd cannot be left blank!")
             data=parser.parse_args()
-            query(f"""UPDATE webapp.userslogin set pwd ='{data["pwd"]}'  WHERE clubname LIKE '{data["rollno"]}' """)
-            return  {"message":"Successfully reset password!"}, 200
+            query(f"""UPDATE webapp.userslogin set pwd ='{data["pwd"]}'  WHERE rollno LIKE '{data["rollno"]}' """)
+            return  jsonify({"message":"Successfully reset password!"})
         except:
-            return  {"message":"Error Reseting password!"}, 200
-    def post(self):
+            return  jsonify({"message":"Error Reseting password!"})
+    ''''def post(self):
         parser=reqparse.RequestParser()
         parser.add_argument('rollno',type=str,required=True,help="rollno cannot be left blank!")
         data=parser.parse_args()

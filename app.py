@@ -3,7 +3,7 @@ from flask_restful import Api
 from flask_jwt_extended import JWTManager
 from resources.admin import AdminLogin,GetDetails,AcceptDeny,GetEvents,GetUsers,GetStudentsRegistered,AdminDeleteEventAndUser
 from resources.clubs import ClubLogin,GetEventDetails,AddRemove,ClubSignUp,Check,ForgotPassword,Verify
-from resources.users import UserLogin,UserSignUp,GetUserEvents,EnrollUnroll,CheckUser,VerifyUser
+from resources.users import UserLogin,UserSignUp,GetUserEvents,Enroll,Unroll,CheckUser,VerifyUser,ForgotPasswordUser
 #from resources.users import Users,UsersLogin
 
 
@@ -31,11 +31,12 @@ def invalid_token_callback(error):
 
 api.add_resource(UserLogin,'/userlogin')
 api.add_resource(GetUserEvents,'/getuserevents')
-api.add_resource(EnrollUnroll,'/enrollunroll')
+api.add_resource(Enroll,'/enroll')
+api.add_resource(Unroll,'/unroll')
 api.add_resource(UserSignUp,'/usersignup')
 api.add_resource(CheckUser,'/checkuser')
 api.add_resource(VerifyUser,'/verifyuser')
-
+api.add_resource(ForgotPasswordUser,'/forgotpassword')
 
 api.add_resource(ClubLogin,'/clublogin')
 api.add_resource(GetEventDetails,'/geteventdetails')
