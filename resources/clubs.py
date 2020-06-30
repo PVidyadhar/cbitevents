@@ -113,7 +113,7 @@ class ForgotPassword(Resource):
         msg['From'] = "iotlab1234@gmail.com"
         msg['To'] = emailid
         msg['Subject'] = "Reset Password"
-        message = """<a href='https://adminclubevents.herokuapp.com/home/resetconf'>Reset Password</a>"""
+        message = """<a href='https://cbit-events.herokuapp.com/home/resetconf'>Reset Password</a>"""
         msg.attach(MIMEText(message, 'html'))
         server = smtplib.SMTP('smtp.gmail.com: 587')
  
